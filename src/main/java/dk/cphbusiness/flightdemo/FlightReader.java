@@ -15,6 +15,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Purpose:
@@ -27,9 +28,36 @@ public class FlightReader {
         FlightReader flightReader = new FlightReader();
         try {
             List<DTOs.FlightDTO> flightList = flightReader.getFlightsFromFile("flights.json");
-            List<DTOs.FlightInfo> flightInfoList = flightReader.getFlightInfoDetails(flightList);
-            flightInfoList.forEach(f->{
-                System.out.println("\n"+f);
+
+            /*List<DTOs.FlightInfo> flightInfoList = flightReader.getFlightInfoDetails(flightList);
+//            flightInfoList.forEach(f->{
+//                System.out.println("\n"+f);
+            });*/
+
+            List<DTOs.FlightInfo> specificFlightInfoList = getSpecificAirportDepartures(flightList);
+            specificFlightInfoList.forEach(flightInfo -> {
+                String formattedOutput = String.format(
+                        "\nFlight Information:" +
+                                "\n-------------------" +
+                                "\nFlight Number : %s" +
+                                "\nIATA Code     : %s" +
+                                "\nAirline       : %s" +
+                                "\nDuration      : %s minutes" +
+                                "\nDeparture     : %s" +
+                                "\nArrival       : %s" +
+                                "\nOrigin        : %s" +
+                                "\nDestination   : %s",
+                        flightInfo.getName(),
+                        flightInfo.getIata(),
+                        flightInfo.getAirline(),
+                        flightInfo.getDuration().toMinutes(),
+                        flightInfo.getDeparture(),
+                        flightInfo.getArrival(),
+                        flightInfo.getOrigin(),
+                        flightInfo.getDestination()
+                );
+
+                System.out.println(formattedOutput);
             });
 
             Duration avgFlightTime = flightReader.getAvgFlightTimeFromIATA("AQJ", flightInfoList);
@@ -48,6 +76,36 @@ public class FlightReader {
 //        return flights;
 //    }
 
+    public static List<DTOs.FlightInfo> getSpecificAirportDepartures(List<DTOs.FlightDTO> flightList) {
+
+        // Using Scanner for Getting Input from User
+        try (Scanner in = new Scanner(System.in)) {
+            System.out.println("Please enter your desired airport:");
+            String airportInput = in.nextLine();
+            System.out.println("" + airportInput);
+
+            // Filtering and mapping flights in a single stream operation
+            return flightList.stream()
+                    .filter(flight -> {
+                        String airport = flight.getDeparture().getAirport();
+                        return airport != null && airport.equals(airportInput);
+                    })
+                    .map(flight -> {
+                        Duration duration = Duration.between(flight.getDeparture().getScheduled(), flight.getArrival().getScheduled());
+                        return DTOs.FlightInfo.builder()
+                                .name(flight.getFlight().getNumber())
+                                .iata(flight.getFlight().getIata())
+                                .airline(flight.getAirline().getName())
+                                .duration(duration)
+                                .departure(flight.getDeparture().getScheduled().toLocalDateTime())
+                                .arrival(flight.getArrival().getScheduled().toLocalDateTime())
+                                .origin(flight.getDeparture().getAirport())
+                                .destination(flight.getArrival().getAirport())
+                                .build();
+                    })
+                    .collect(Collectors.toList());
+        }
+    }
 
     public List<DTOs.FlightInfo> getFlightInfoDetails(List<DTOs.FlightDTO> flightList) {
         List<DTOs.FlightInfo> flightInfoList = flightList.stream().map(flight -> {
