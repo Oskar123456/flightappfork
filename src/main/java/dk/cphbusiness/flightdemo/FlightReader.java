@@ -60,9 +60,10 @@ public class FlightReader {
                 System.out.println(formattedOutput);
             });
 
-            Duration avgFlightTime = flightReader.getAvgFlightTimeFromIATA("AQJ", flightInfoList);
+            String airlinenametest = "Skymark Airlines";
+            Duration avgFlightTime = flightReader.getAvgFlightTimeFromIATA(airlinenametest, flightInfoList);
             System.out.printf("%n%n");
-            System.out.println(" >>> AVG Flight Time for AQJ: " +  avgFlightTime.toString());
+            System.out.println(" >>> AVG Flight Time for " + airlinenametest + ": " +  avgFlightTime.toString());
             System.out.printf("%n%n");
 
         } catch (IOException e) {
@@ -133,14 +134,14 @@ public class FlightReader {
         return flightList;
     }
 
-    public Duration getAvgFlightTimeFromIATA(String iata, List<DTOs.FlightInfo> flightInfoList) {
+    public Duration getAvgFlightTimeFromIATA(String airline, List<DTOs.FlightInfo> flightInfoList) {
         long total = 0;
-        for (DTOs.FlightInfo flightInfo : flightInfoList) {
+        for (DTOs.FlightInfo flightInfo : flightInfoList.stream().
+                filter(flight -> flight.getAirline() != null && flight.getAirline().equals(airline)).toList()) {
             total += flightInfo.getDuration().getSeconds();
         }
         return Duration.ofSeconds(total/flightInfoList.size());
     }
-
 }
 
 
