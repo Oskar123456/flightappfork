@@ -31,6 +31,12 @@ public class FlightReader {
             flightInfoList.forEach(f->{
                 System.out.println("\n"+f);
             });
+
+            Duration avgFlightTime = flightReader.getAvgFlightTimeFromIATA("AQJ", flightInfoList);
+            System.out.printf("%n%n");
+            System.out.println(" >>> AVG Flight Time for AQJ: " +  avgFlightTime.toString());
+            System.out.printf("%n%n");
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -69,5 +75,32 @@ public class FlightReader {
         return flightList;
     }
 
+    public Duration getAvgFlightTimeFromIATA(String iata, List<DTOs.FlightInfo> flightInfoList) {
+        long total = 0;
+        for (DTOs.FlightInfo flightInfo : flightInfoList) {
+            total += flightInfo.getDuration().getSeconds();
+        }
+        return Duration.ofSeconds(total/flightInfoList.size());
+    }
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
